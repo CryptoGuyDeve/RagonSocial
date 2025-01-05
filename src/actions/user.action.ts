@@ -58,9 +58,9 @@ export async function getDbUserId() {
 
   const user = await getUserByClerkId(clerkId);
 
-  // if (!user) throw new Error("User not found");
+  if (!user) throw new Error("User not found");
 
-  // return user.id;
+  return user.id;
 }
 
 export async function getRandomUsers() {
