@@ -82,7 +82,7 @@ export async function toggleLike(postId: string) {
     const userId = await getDbUserId();
     if (!userId) return;
 
-    // check if like exists
+    // Check if like exists
     const existingLike = await prisma.like.findUnique({
       where: {
         userId_postId: {
@@ -100,7 +100,7 @@ export async function toggleLike(postId: string) {
     if (!post) throw new Error("Post not found");
 
     if (existingLike) {
-      // unlike
+      // Unlike
       await prisma.like.delete({
         where: {
           userId_postId: {
@@ -110,7 +110,7 @@ export async function toggleLike(postId: string) {
         },
       });
     } else {
-      // like and create notification (only if liking someone else's post)
+      // Like and create notification (only if liking someone else's post)
       await prisma.$transaction([
         prisma.like.create({
           data: {
@@ -194,13 +194,17 @@ export async function deletePost(postId: string) {
   try {
     const userId = await getDbUserId();
 
+    if (!userId) throw new Error("Unauthorized - user not found");
+
     const post = await prisma.post.findUnique({
       where: { id: postId },
       select: { authorId: true },
     });
 
     if (!post) throw new Error("Post not found");
-    // if (post.authorId !== userId) throw new Error("Unauthorized - no delete permission");
+    if (!post.authorId || post.authorId !== userId) {
+      throw new Error("Unauthorized - no delete permission");
+    }
 
     await prisma.post.delete({
       where: { id: postId },
