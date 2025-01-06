@@ -1,10 +1,20 @@
-// src/app/support-us/page.tsx
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function SupportUs() {
   const [loading, setLoading] = useState(false);
+  const [isDarkBackground, setIsDarkBackground] = useState(false);
+
+  useEffect(() => {
+    // Ensure this runs only on the client
+    if (typeof window !== 'undefined') {
+      setIsDarkBackground(
+        document.body.style.backgroundColor === 'black' ||
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+      );
+    }
+  }, []);
 
   const handleCheckout = () => {
     setLoading(true);
@@ -12,12 +22,11 @@ export default function SupportUs() {
     window.location.href = 'https://donate.stripe.com/test_5kA2ab4M2dBc1gI3cc';
   };
 
-  // Get the current background color to adjust text color
-  const isDarkBackground = document.body.style.backgroundColor === 'black' || window.matchMedia('(prefers-color-scheme: dark)').matches;
-
   return (
     <div className="p-8 rounded-lg shadow-lg max-w-md mx-auto">
-      <h1 className={`text-3xl font-semibold text-center ${isDarkBackground ? 'text-white' : 'text-black'} mb-4`}>Support Us</h1>
+      <h1 className={`text-3xl font-semibold text-center ${isDarkBackground ? 'text-white' : 'text-black'} mb-4`}>
+        Support Us
+      </h1>
       <p className={`text-center ${isDarkBackground ? 'text-white' : 'text-black'} mb-6`}>
         Your support helps us continue our mission to make a difference.
       </p>
