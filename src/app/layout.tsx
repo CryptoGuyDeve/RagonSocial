@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { Toaster } from "react-hot-toast";
+import Footer from "@/app/Footer/page";  // Import Footer component from page.tsx
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -46,7 +47,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className="min-h-screen flex flex-col">
+            <div className="flex flex-col min-h-screen">
               <Navbar />
               <main className="py-8 flex-grow">
                 {/* Container to center the content */}
@@ -59,6 +60,10 @@ export default function RootLayout({
                   </div>
                 </div>
               </main>
+              {/* Add Footer component here */}
+              <div className="mt-auto">
+                <Footer />
+              </div>
             </div>
             <Toaster />
           </ThemeProvider>
