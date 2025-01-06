@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 
+// Syncs the user with the database or returns the existing user
 export async function syncUser() {
   try {
     const { userId } = await auth();
@@ -11,6 +12,7 @@ export async function syncUser() {
 
     if (!userId || !user) return;
 
+    // Check if the user already exists in the database
     const existingUser = await prisma.user.findUnique({
       where: {
         clerkId: userId,
@@ -19,6 +21,7 @@ export async function syncUser() {
 
     if (existingUser) return existingUser;
 
+    // Create new user record if not found
     const dbUser = await prisma.user.create({
       data: {
         clerkId: userId,
@@ -35,6 +38,7 @@ export async function syncUser() {
   }
 }
 
+// Fetches a user by their Clerk ID
 export async function getUserByClerkId(clerkId: string) {
   return prisma.user.findUnique({
     where: {
@@ -52,6 +56,7 @@ export async function getUserByClerkId(clerkId: string) {
   });
 }
 
+// Retrieves the user's ID from the database using their Clerk ID
 export async function getDbUserId() {
   const { userId: clerkId } = await auth();
   if (!clerkId) return null;
@@ -63,13 +68,14 @@ export async function getDbUserId() {
   return user.id;
 }
 
+// Retrieves 3 random users that the current user does not follow
 export async function getRandomUsers() {
   try {
     const userId = await getDbUserId();
 
     if (!userId) return [];
 
-    // get 3 random users exclude ourselves & users that we already follow
+    // Get 3 random users excluding the current user and the users already followed
     const randomUsers = await prisma.user.findMany({
       where: {
         AND: [
@@ -106,6 +112,38 @@ export async function getRandomUsers() {
   }
 }
 
+// Fetches a user by their username (added functionality for search)
+export async function getUserByUsername(username: string) {
+  try {
+    // Query the database for users with matching username
+    const users = await prisma.user.findMany({
+      where: {
+        username: {
+          contains: username,
+          mode: "insensitive", // Case insensitive search
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        image: true,
+        _count: {
+          select: {
+            followers: true,
+          },
+        },
+      },
+    });
+
+    return users;
+  } catch (error) {
+    console.log("Error searching for user by username", error);
+    return [];
+  }
+}
+
+// Handles following or unfollowing a user
 export async function toggleFollow(targetUserId: string) {
   try {
     const userId = await getDbUserId();
@@ -114,6 +152,7 @@ export async function toggleFollow(targetUserId: string) {
 
     if (userId === targetUserId) throw new Error("You cannot follow yourself");
 
+    // Check if the user already follows the target user
     const existingFollow = await prisma.follows.findUnique({
       where: {
         followerId_followingId: {
@@ -124,7 +163,7 @@ export async function toggleFollow(targetUserId: string) {
     });
 
     if (existingFollow) {
-      // unfollow
+      // If already following, unfollow the target user
       await prisma.follows.delete({
         where: {
           followerId_followingId: {
@@ -134,7 +173,7 @@ export async function toggleFollow(targetUserId: string) {
         },
       });
     } else {
-      // follow
+      // Otherwise, follow the target user
       await prisma.$transaction([
         prisma.follows.create({
           data: {
@@ -153,7 +192,7 @@ export async function toggleFollow(targetUserId: string) {
       ]);
     }
 
-    revalidatePath("/");
+    revalidatePath("/"); // Revalidate the homepage for updated follow counts
     return { success: true };
   } catch (error) {
     console.log("Error in toggleFollow", error);
