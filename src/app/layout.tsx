@@ -12,6 +12,7 @@ const geistSans = localFont({
   variable: "--font-geist-sans",
   weight: "100 900",
 });
+
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
@@ -21,6 +22,9 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Ragon Social",
   description: "A modern social media application powered by Next.js",
+  icons: {
+    icon: "/favicon.ico", // Ensure the path is correct
+  },
 };
 
 export default function RootLayout({
@@ -31,6 +35,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
+        <head>
+          {/* Favicon for fallback */}
+          <link rel="icon" href="/favicon.ico" />
+        </head>
         <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
           <ThemeProvider
             attribute="class"
@@ -38,11 +46,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <div className="min-h-screen">
+            <div className="min-h-screen flex flex-col">
               <Navbar />
-
-              <main className="py-8">
-                {/* container to center the content */}
+              <main className="py-8 flex-grow">
+                {/* Container to center the content */}
                 <div className="max-w-7xl mx-auto px-4">
                   <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                     <div className="hidden lg:block lg:col-span-3">
