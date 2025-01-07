@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { getDbUserId } from "./user.action";
 import { revalidatePath } from "next/cache";
 
+// Function to create a new post
 export async function createPost(content: string, image: string) {
   try {
     const userId = await getDbUserId();
@@ -18,7 +19,7 @@ export async function createPost(content: string, image: string) {
       },
     });
 
-    revalidatePath("/"); // purge the cache for the home page
+    revalidatePath("/"); // Purge the cache for the home page
     return { success: true, post };
   } catch (error) {
     console.error("Failed to create post:", error);
@@ -26,6 +27,7 @@ export async function createPost(content: string, image: string) {
   }
 }
 
+// Function to get all posts
 export async function getPosts() {
   try {
     const posts = await prisma.post.findMany({
@@ -77,6 +79,7 @@ export async function getPosts() {
   }
 }
 
+// Function to toggle like on a post
 export async function toggleLike(postId: string) {
   try {
     const userId = await getDbUserId();
@@ -141,6 +144,7 @@ export async function toggleLike(postId: string) {
   }
 }
 
+// Function to create a comment on a post
 export async function createComment(postId: string, content: string) {
   try {
     const userId = await getDbUserId();
@@ -190,6 +194,7 @@ export async function createComment(postId: string, content: string) {
   }
 }
 
+// Function to delete a post
 export async function deletePost(postId: string) {
   try {
     const userId = await getDbUserId();
@@ -210,10 +215,65 @@ export async function deletePost(postId: string) {
       where: { id: postId },
     });
 
-    revalidatePath("/"); // purge the cache
+    revalidatePath("/"); // Purge the cache
     return { success: true };
   } catch (error) {
     console.error("Failed to delete post:", error);
     return { success: false, error: "Failed to delete post" };
+  }
+}
+
+// Function to get posts by a specific user
+export async function getPostsByUser(userId: string) {
+  try {
+    const posts = await prisma.post.findMany({
+      where: {
+        authorId: userId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            image: true,
+            username: true,
+          },
+        },
+        comments: {
+          include: {
+            author: {
+              select: {
+                id: true,
+                username: true,
+                image: true,
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+        likes: {
+          select: {
+            userId: true,
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+            comments: true,
+          },
+        },
+      },
+    });
+
+    return posts;
+  } catch (error) {
+    console.log("Error in getPostsByUser", error);
+    throw new Error("Failed to fetch posts by user");
   }
 }

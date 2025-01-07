@@ -174,7 +174,7 @@ export async function toggleFollow(targetUserId: string) {
       });
     } else {
       // Otherwise, follow the target user
-      await prisma.$transaction([
+      await prisma.$transaction([ 
         prisma.follows.create({
           data: {
             followerId: userId,
